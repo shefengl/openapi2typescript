@@ -55,9 +55,10 @@ files
 {{ "," if api.body or api.hasParams or api.file }}
   options {{ "?: {[key: string]: any}" if genType === "ts" }}
 ) {
-  {% if api.params and api.params.path -%}
-  const { {% for param in api.params.path %}'{{ param.name }}': {{ param.alias }}, {% endfor %}
-  {% if api.params.path -%}
+  {% if api.params and api.params.path or api.params.header -%}
+  const { {% if api.params.path -%} {% for param in api.params.path %}'{{ param.name }}': {{ param.alias }}, {% endfor %} {% endif -%}
+  {% if api.params.header -%} {% for param in api.params.header %}'{{ param.name }}': {{ param.alias }}, {% endfor %} {% endif -%}
+  {% if api.params.path or api.params.header -%}
   ...queryParams
   {% endif -%}
   } = params;
@@ -101,9 +102,16 @@ files
       {%- if api.body.mediaType %}
       'Content-Type': '{{ api.body.mediaType | safe }}',
       {%- endif %}
+      {%- if api.params.header %}
+      {% for param in api.params.header -%}
+      '{{ param.name }}'
+      {{- "?" if not param.required }}
+      {{- (": " + param.alias + ",") | safe }}
+      {% endfor -%}
+      {%- endif %}
     },
     {%- endif %}
-    {%- if api.params and api.hasParams %}
+    {%- if api.params and api.hasParams and api.params.query %}
     params: {
       {%- for query in api.params.query %}
         {% if query.schema.default -%}

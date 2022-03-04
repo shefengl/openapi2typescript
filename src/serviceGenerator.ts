@@ -11,7 +11,7 @@ import type {
   RequestBodyObject,
   ResponseObject,
   ResponsesObject,
-  SchemaObject,
+  SchemaObject
 } from 'openapi3-ts';
 import { join } from 'path';
 import ReservedDict from 'reserved-words';
@@ -431,6 +431,15 @@ class ServiceGenerator {
                 ...ele,
                 alias: `param${index}`,
               }));
+
+             
+
+              const escapedHeaderParams =  ((params || {}).header || []).map((ele, index) => ({
+                ...ele,
+                alias: `header${index}`,
+              }));
+
+             
               if (escapedPathParams.length) {
                 escapedPathParams.forEach((param) => {
                   formattedPath = formattedPath.replace(`$\{${param.name}}`, `$\{${param.alias}}`);
@@ -439,8 +448,8 @@ class ServiceGenerator {
 
               const finalParams =
                 escapedPathParams && escapedPathParams.length
-                  ? { ...params, path: escapedPathParams }
-                  : params;
+                  ? escapedHeaderParams && escapedHeaderParams.length ?  { ...params, path: escapedPathParams, header: escapedHeaderParams, } : {...params, path: escapedPathParams}
+                  : escapedHeaderParams && escapedHeaderParams.length ?  { ...params, path: escapedPathParams, header: escapedHeaderParams, } : params;
 
               // 处理 query 中的复杂对象
               if (finalParams && finalParams.query) {
@@ -482,6 +491,7 @@ class ServiceGenerator {
                 // prefix 变量
                 return `$\{${prefix}}${formattedPath}`;
               };
+
 
               return {
                 ...newApi,
